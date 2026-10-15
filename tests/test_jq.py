@@ -48,8 +48,9 @@ def test_fish_matches_sh():
 @pytest.mark.skipif(not JQ.is_file(), reason="requires /usr/bin/jq")
 def test_jq_renders_roles():
     env = {"PATH": "/usr/bin:/bin", "JQ_COLORS": value(REPO / "deepwick.sh")}
-    out = subprocess.run([str(JQ), "-C", "."], input=json.dumps(SAMPLE), env=env, capture_output=True, text=True, check=True).stdout
-    assert "Failed to set" not in out
+    result = subprocess.run([str(JQ), "-C", "."], input=json.dumps(SAMPLE), env=env, capture_output=True, text=True, check=True)
+    assert "Failed to set" not in result.stderr
+    out = result.stdout
     assert style_of(out, '"deepwick"')["fg"] == C["orange"].lower()
     assert style_of(out, '"name"')["fg"] == C["lightBlue"].lower()
     assert style_of(out, "3")["fg"] == C["sage"].lower()
