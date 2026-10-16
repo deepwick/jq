@@ -14,6 +14,16 @@ PALETTE = load_palette()
 C = PALETTE.colors
 JQ = Path("/usr/bin/jq")
 FIELDS = ("blue", "blue", "blue", "sage", "orange", "foreground", "foreground", "lightBlue")
+
+
+def jq_version() -> tuple[int, ...]:
+    if not JQ.is_file():
+        return ()
+    out = subprocess.run([str(JQ), "--version"], capture_output=True, text=True).stdout
+    match = re.search(r"(\d+)\.(\d+)", out)
+    return tuple(int(part) for part in match.groups()) if match else ()
+
+
 SAMPLE = {"name": "deepwick", "count": 3, "ok": True, "off": False, "none": None, "tags": ["a"]}
 
 
@@ -45,7 +55,7 @@ def test_fish_matches_sh():
     assert value(REPO / "deepwick.fish") == value(REPO / "deepwick.sh")
 
 
-@pytest.mark.skipif(not JQ.is_file(), reason="requires /usr/bin/jq")
+@pytest.mark.skipif(jq_version() < (1, 8), reason="requires /usr/bin/jq 1.8+ (8-field JQ_COLORS)")
 def test_jq_renders_roles():
     env = {"PATH": "/usr/bin:/bin", "JQ_COLORS": value(REPO / "deepwick.sh")}
     result = subprocess.run([str(JQ), "-C", "."], input=json.dumps(SAMPLE), env=env, capture_output=True, text=True, check=True)
